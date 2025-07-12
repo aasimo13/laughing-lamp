@@ -151,49 +151,67 @@ function App() {
 
   const speak = (text: string) => {
     if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text)
+      // Cancel any ongoing speech first
+      speechSynthesis.cancel()
       
-      // Get available voices
-      const voices = speechSynthesis.getVoices()
-      
-      let chosenVoice: SpeechSynthesisVoice | null = null
-      
-      // Use manually selected voice if available
-      if (selectedVoiceIndex >= 0 && voices[selectedVoiceIndex]) {
-        chosenVoice = voices[selectedVoiceIndex]
-      } else {
-        // Try to find a female or child-like voice automatically
-        chosenVoice = voices.find(voice => 
-          voice.name.toLowerCase().includes('female') ||
-          voice.name.toLowerCase().includes('woman') ||
-          voice.name.toLowerCase().includes('girl') ||
-          voice.name.toLowerCase().includes('child') ||
-          voice.name.toLowerCase().includes('kids') ||
-          voice.name.toLowerCase().includes('samantha') ||
-          voice.name.toLowerCase().includes('victoria') ||
-          voice.name.toLowerCase().includes('karen') ||
-          voice.name.toLowerCase().includes('zira') ||
-          voice.name.toLowerCase().includes('allison') ||
-          voice.name.toLowerCase().includes('ava')
-        ) || voices.find(voice => voice.lang.startsWith('en') && voice.default) || null
-      }
-      
-      if (chosenVoice) {
-        utterance.voice = chosenVoice
-      }
-      
-      // Use customizable voice settings
-      utterance.rate = voiceSettings.rate
-      utterance.pitch = voiceSettings.pitch
-      utterance.volume = voiceSettings.volume
-      
-      speechSynthesis.speak(utterance)
+      // Small delay to ensure cancellation is processed
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text)
+        
+        // Get available voices
+        const voices = speechSynthesis.getVoices()
+        
+        let chosenVoice: SpeechSynthesisVoice | null = null
+        
+        // Use manually selected voice if available
+        if (selectedVoiceIndex >= 0 && voices[selectedVoiceIndex]) {
+          chosenVoice = voices[selectedVoiceIndex]
+        } else {
+          // Try to find a female or child-like voice automatically
+          chosenVoice = voices.find(voice => 
+            voice.name.toLowerCase().includes('female') ||
+            voice.name.toLowerCase().includes('woman') ||
+            voice.name.toLowerCase().includes('girl') ||
+            voice.name.toLowerCase().includes('child') ||
+            voice.name.toLowerCase().includes('kids') ||
+            voice.name.toLowerCase().includes('samantha') ||
+            voice.name.toLowerCase().includes('victoria') ||
+            voice.name.toLowerCase().includes('karen') ||
+            voice.name.toLowerCase().includes('zira') ||
+            voice.name.toLowerCase().includes('allison') ||
+            voice.name.toLowerCase().includes('ava')
+          ) || voices.find(voice => voice.lang.startsWith('en') && voice.default) || null
+        }
+        
+        if (chosenVoice) {
+          utterance.voice = chosenVoice
+        }
+        
+        // Use customizable voice settings
+        utterance.rate = voiceSettings.rate
+        utterance.pitch = voiceSettings.pitch
+        utterance.volume = voiceSettings.volume
+        
+        speechSynthesis.speak(utterance)
+      }, 50)
     }
   }
 
   const testVoice = (voiceIndex: number) => {
+    // Stop any current speech first
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel()
+    }
+    
     setSelectedVoiceIndex(voiceIndex)
-    setTimeout(() => speak("Hi! This is how I sound."), 100)
+    
+    // Wait a bit longer and test again to ensure voice selection is applied
+    setTimeout(() => {
+      if ('speechSynthesis' in window) {
+        speechSynthesis.cancel() // Cancel again just to be sure
+      }
+      speak("Hi! This is how I sound.")
+    }, 200)
   }
 
   const addWord = (text: string, category: string, iconName: string = 'Star') => {
